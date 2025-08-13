@@ -15,12 +15,13 @@ from oidc_provider.lib.claims import StandardScopeClaims
 from oidc_provider.models import (
     Code,
     RSAKey,
-    Token, RefreshToken,
+    Token,
+    RefreshToken,
 )
 from oidc_provider import settings
 
 
-def create_id_token(token, user, aud, nonce='', at_hash='', request=None, scope=None):
+def create_id_token(token, user, aud, nonce="", at_hash="", request=None, scope=None):
     """
     Creates the id_token dictionary.
     See: http://openid.net/specs/openid-connect-core-1_0.html#IDToken
@@ -28,44 +29,44 @@ def create_id_token(token, user, aud, nonce='', at_hash='', request=None, scope=
     """
     if scope is None:
         scope = []
-    sub = settings.get('OIDC_IDTOKEN_SUB_GENERATOR', import_str=True)(user=user)
+    sub = settings.get("OIDC_IDTOKEN_SUB_GENERATOR", import_str=True)(user=user)
 
-    expires_in = settings.get('OIDC_IDTOKEN_EXPIRE')
+    expires_in = settings.get("OIDC_IDTOKEN_EXPIRE")
 
     # Convert datetimes into timestamps.
     now = int(time.time())
     iat_time = now
     exp_time = int(now + expires_in)
     user_auth_time = user.last_login or user.date_joined
-    auth_time = int(dateformat.format(user_auth_time, 'U'))
+    auth_time = int(dateformat.format(user_auth_time, "U"))
 
     dic = {
-        'iss': get_issuer(request=request),
-        'sub': sub,
-        'aud': str(aud),
-        'exp': exp_time,
-        'iat': iat_time,
-        'auth_time': auth_time,
+        "iss": get_issuer(request=request),
+        "sub": sub,
+        "aud": str(aud),
+        "exp": exp_time,
+        "iat": iat_time,
+        "auth_time": auth_time,
     }
 
     if nonce:
-        dic['nonce'] = str(nonce)
+        dic["nonce"] = str(nonce)
 
     if at_hash:
-        dic['at_hash'] = at_hash
+        dic["at_hash"] = at_hash
 
     # Inlude (or not) user standard claims in the id_token.
-    if settings.get('OIDC_IDTOKEN_INCLUDE_CLAIMS'):
-        if settings.get('OIDC_EXTRA_SCOPE_CLAIMS'):
-            custom_claims = settings.get('OIDC_EXTRA_SCOPE_CLAIMS', import_str=True)(token)
-            claims = custom_claims.create_response_dic()
-        else:
-            claims = StandardScopeClaims(token).create_response_dic()
-        dic.update(claims)
+    if settings.get("OIDC_IDTOKEN_INCLUDE_CLAIMS"):
+        standard_claims = StandardScopeClaims(token)
+        dic.update(standard_claims.create_response_dic())
+
+        if settings.get("OIDC_EXTRA_SCOPE_CLAIMS"):
+            extra_claims = settings.get("OIDC_EXTRA_SCOPE_CLAIMS", import_str=True)(token)
+            dic.update(extra_claims.create_response_dic())
 
     dic = run_processing_hook(
-        dic, 'OIDC_IDTOKEN_PROCESSING_HOOK',
-        user=user, token=token, request=request)
+        dic, "OIDC_IDTOKEN_PROCESSING_HOOK", user=user, token=token, request=request
+    )
 
     return dic
 
@@ -95,7 +96,7 @@ def client_id_from_id_token(id_token):
     Returns a string or None.
     """
     payload = JWT().unpack(id_token).payload()
-    aud = payload.get('aud', None)
+    aud = payload.get("aud", None)
     if aud is None:
         return None
     if isinstance(aud, list):
@@ -116,12 +117,9 @@ def create_token(user, client, scope, id_token_dic=None, refresh_token=None):
     if id_token_dic is not None:
         token.id_token = id_token_dic
 
-    now = timezone.now()
-    token.expires_at = now + timedelta(
-        seconds=settings.get('OIDC_TOKEN_EXPIRE'),
-    )
+    token.refresh_token = refresh_token or uuid.uuid4().hex
+    token.expires_at = timezone.now() + timedelta(seconds=settings.get("OIDC_TOKEN_EXPIRE"))
     token.scope = scope
-    token.refresh_token = refresh_token
 
     return token
 
@@ -147,14 +145,15 @@ def create_refresh_token(user, client, scope):
     token.refresh_token = uuid.uuid4().hex
     now = timezone.now()
     token.expires_at = now + timedelta(
-        seconds=settings.get('OIDC_REFRESH_TOKEN_EXPIRE', 0),
+        seconds=settings.get("OIDC_REFRESH_TOKEN_EXPIRE", 0),
     )
 
     return token
 
 
-def create_code(user, client, scope, nonce, is_authentication,
-                code_challenge=None, code_challenge_method=None):
+def create_code(
+    user, client, scope, nonce, is_authentication, code_challenge=None, code_challenge_method=None
+):
     """
     Create and populate a Code object.
     Return a Code object.
@@ -169,8 +168,7 @@ def create_code(user, client, scope, nonce, is_authentication,
         code.code_challenge = code_challenge
         code.code_challenge_method = code_challenge_method
 
-    code.expires_at = timezone.now() + timedelta(
-        seconds=settings.get('OIDC_CODE_EXPIRE'))
+    code.expires_at = timezone.now() + timedelta(seconds=settings.get("OIDC_CODE_EXPIRE"))
     code.scope = scope
     code.nonce = nonce
     code.is_authentication = is_authentication
@@ -183,16 +181,16 @@ def get_client_alg_keys(client):
     Takes a client and returns the set of keys associated with it.
     Returns a list of keys.
     """
-    if client.jwt_alg == 'RS256':
+    if client.jwt_alg == "RS256":
         keys = []
         for rsakey in RSAKey.objects.all():
             keys.append(jwk_RSAKey(key=importKey(rsakey.key), kid=rsakey.kid))
         if not keys:
-            raise Exception('You must add at least one RSA Key.')
-    elif client.jwt_alg == 'HS256':
+            raise Exception("You must add at least one RSA Key.")
+    elif client.jwt_alg == "HS256":
         keys = [SYMKey(key=client.client_secret, alg=client.jwt_alg)]
     else:
-        raise Exception('Unsupported key algorithm.')
+        raise Exception("Unsupported key algorithm.")
 
     return keys
 
@@ -204,18 +202,18 @@ def create_logout_token(user, aud, sid, request=None) -> dict:
     Return a dic.
     """
     sub = settings.get(
-        'OIDC_IDTOKEN_SUB_GENERATOR',
+        "OIDC_IDTOKEN_SUB_GENERATOR",
         import_str=True,
     )(user=user)
 
     dic = {
-        'iss': get_issuer(request=request),
-        'sub': sub,
-        'aud': str(aud),
-        'iat': int(time.time()),
-        'jti': md5(uuid.uuid4().hex.encode()).hexdigest(),
-        'events': 'http://schemas.openid.net/event/backchannel-logout',
-        'sid': sid,
+        "iss": get_issuer(request=request),
+        "sub": sub,
+        "aud": str(aud),
+        "iat": int(time.time()),
+        "jti": md5(uuid.uuid4().hex.encode()).hexdigest(),
+        "events": "http://schemas.openid.net/event/backchannel-logout",
+        "sid": sid,
     }
 
     return dic

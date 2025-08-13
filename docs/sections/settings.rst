@@ -53,21 +53,21 @@ OIDC_CODE_EXPIRE
 
 OPTIONAL. ``int``. Code object expiration after been delivered.
 
-Expressed in seconds. Default is ``60*10``.
+Expressed in seconds. Default is ``10 mins``.
 
 OIDC_DISCOVERY_CACHE_ENABLE
-================
+===========================
 
 OPTIONAL. ``bool``. Enable caching the response on the discovery endpoint, by using default cache. Cache key will be a combination of site URL and types supported by the provider, changing any of these will invalidate stored value.
 
 Default is ``False``.
 
 OIDC_DISCOVERY_CACHE_EXPIRE
-================
+===========================
 
 OPTIONAL. ``int``. Discovery endpoint cache expiration time expressed in seconds.
 
-Expressed in seconds. Default is ``60*10``.
+Expressed in seconds. Default is ``1 day``.
 
 OIDC_EXTRA_SCOPE_CLAIMS
 =======================
@@ -81,7 +81,7 @@ Read more about how to implement it in :ref:`scopesclaims` section.
 OIDC_IDTOKEN_INCLUDE_CLAIMS
 ==============================
 
-OPTIONAL. ``bool``. If enabled, id_token will include standard claims of the user (email, first name, etc.).
+OPTIONAL. ``bool``. If enabled, id_token will include standard (and extra if defined) claims of the user (email, first name, etc.).
 
 Default is ``False``.
 
@@ -90,7 +90,7 @@ OIDC_IDTOKEN_EXPIRE
 
 OPTIONAL. ``int``. ID Token expiration after been delivered.
 
-Expressed in seconds. Default is ``60*10``.
+Expressed in seconds. Default is ``10 mins``.
 
 OIDC_IDTOKEN_PROCESSING_HOOK
 ============================
@@ -188,14 +188,14 @@ OIDC_SKIP_CONSENT_EXPIRE
 
 OPTIONAL. ``int``. How soon User Consent expires after being granted.
 
-Expressed in days. Default is ``30*3``.
+Expressed in days. Default is ``90 days``.
 
 OIDC_TOKEN_EXPIRE
 =================
 
 OPTIONAL. ``int``. Token object (access token) expiration after being created.
 
-Expressed in seconds. Default is ``60*60``.
+Expressed in seconds. Default is ``1 hour``.
 
 OIDC_USERINFO
 =============
