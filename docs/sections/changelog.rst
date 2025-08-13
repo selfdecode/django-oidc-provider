@@ -8,6 +8,30 @@ All notable changes to this project will be documented in this file.
 Unreleased
 ==========
 
+Nothing yet.
+
+0.8.4
+=====
+
+*2025-05-24*
+
+* Added: test package against Python 3.12 and 3.13.
+* Added: test package against Django 5.
+* Added: support of max_age parameter on authorization request.
+* Added: Passing Request Parameters as JWTs now returning request_not_supported error.
+* Added: Simplified chinese translation.
+* Changed: ID Token JSON encoder improved using DjangoJSONEncoder.
+* Changed: Use unittest.mock in tests. Remove mock library.
+
+0.8.3
+=====
+
+*2024-12-06*
+
+* Changed: Improved "OpenID Connect RP-Initiated Logout" implementation.
+* Fixed: Fix ID Tokens not including standard claims when using extra scope claims.
+* Fixed: RSA server keys random ordering.
+* Fixed: Example app working with Django 4.
 
 0.8.2
 =====
