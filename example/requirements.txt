@@ -1,2 +1,2 @@
-django==4.2.24
+django==4.2.26
 https://github.com/juanifioren/django-oidc-provider/archive/master.zip
